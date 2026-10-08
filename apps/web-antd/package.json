@@ -45,7 +45,7 @@
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
     "echarts": "catalog:",
-    "echarts-gl": "2.0.9",
+    "echarts-gl": "2.1.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"
