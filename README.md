@@ -1,147 +1,57 @@
-# ORP Frontend
+# ORP 前端
 
-OpenResty Plus 管理控制台前端独立项目，项目目录和包标识均为 `orp-frontend`。应用基于 Vue 3、Vite、TypeScript 与 Vben Admin 构建。安装、启动和构建说明见 [PROJECT.md](PROJECT.md)。
+ORP 前端是 OpenResty Plus 的管理控制台，作为独立项目维护。项目目录和包标识均为 `orp-frontend`，基于 Vue 3、Vite、TypeScript 与 Vben Admin 构建。框架专用包保留上游包名及 MIT 许可声明。
+
+安装、启动、构建所需的 Node.js/pnpm 版本和环境配置请参阅 [`PROJECT.md`](PROJECT.md)。
 
 <div align="center">
   <a href="https://github.com/anncwb/vue-vben-admin">
-    <img alt="VbenAdmin Logo" width="215" src="https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp">
+    <img alt="Vben Admin 标志" width="215" src="https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp">
   </a>
   <br>
   <br>
 
-[![license](https://img.shields.io/github/license/anncwb/vue-vben-admin.svg)](LICENSE)
+[![许可证](https://img.shields.io/github/license/anncwb/vue-vben-admin.svg)](LICENSE)
 
-  <h1>ORP Frontend</h1>
+  <h1>ORP 前端</h1>
 </div>
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vbenjs_vue-vben-admin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vbenjs_vue-vben-admin) [![codeql](https://github.com/vbenjs/vue-vben-admin/actions/workflows/codeql.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/codeql.yml) [![build](https://github.com/vbenjs/vue-vben-admin/actions/workflows/build.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/build.yml) [![ci](https://github.com/vbenjs/vue-vben-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/ci.yml) [![deploy](https://github.com/vbenjs/vue-vben-admin/actions/workflows/deploy.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/deploy.yml)
+## 项目特点
 
-**English** | [中文](./README.zh-CN.md) | [日本語](./README.ja-JP.md)
+- **现代技术栈**：使用 Vue 3、Vite 和 TypeScript 构建。
+- **主题定制**：提供多种主题颜色与自定义选项。
+- **国际化**：内置多语言支持。
+- **权限管理**：支持按权限动态生成路由。
+- **管理控制台**：为 OpenResty Plus 提供前端管理界面。
 
-## Introduction
+## 本地开发
 
-ORP Frontend is the OpenResty Plus administration console, built with Vue 3, Vite, TypeScript, and the Vben Admin framework. Vben-specific framework packages retain their upstream package names and MIT notices.
-
-## Upgrade Notice
-
-This is the latest version, 5.0, and it is not compatible with previous versions. If you are starting a new project, it is recommended to use the latest version. If you wish to view the old version, please use the [v2 branch](https://github.com/vbenjs/vue-vben-admin/tree/v2).
-
-## Features
-
-- **Latest Technology Stack**: Developed with cutting-edge front-end technologies like Vue 3 and Vite
-- **TypeScript**: A language for application-scale JavaScript
-- **Themes**: Multiple theme colors available with customizable options
-- **Internationalization**: Comprehensive built-in internationalization support
-- **Permissions**: Built-in solution for dynamic route-based permission generation
-
-## Preview
-
-- [Vben Admin](https://vben.pro/) - Full version Chinese site
-
-<div align="center">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview1.png">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview2.png">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview3.png">
-</div>
-
-### Use Gitpod
-
-Open the project in Gitpod (free online dev environment for GitHub) and start coding immediately.
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vbenjs/vue-vben-admin)
-
-## Documentation
-
-[Document](https://doc.vben.pro/)
-
-## Develop ORP Frontend
-
-See [PROJECT.md](PROJECT.md) for supported Node.js/pnpm versions and environment configuration.
-
-```bash
+```sh
 pnpm install --frozen-lockfile
 pnpm --filter @vben/web-antd dev
 ```
 
-Build the application with:
+构建前端应用：
 
-```bash
+```sh
 pnpm --filter @vben/web-antd typecheck
 pnpm --filter @vben/web-antd build
 ```
 
-## Change Log
+## 参考资料
 
-[CHANGELOG](https://github.com/vbenjs/vue-vben-admin/releases)
+- [Vben Admin 中文站](https://vben.pro/)
+- [Vben Admin 文档](https://doc.vben.pro/)
+- [项目变更记录](https://github.com/vbenjs/vue-vben-admin/releases)
 
-## How to Contribute
+## 贡献
 
-You are very welcome to join! [Raise an issue](https://github.com/anncwb/vue-vben-admin/issues/new/choose) or submit a Pull Request.
+欢迎通过 GitHub Issues 反馈问题，或提交 Pull Request。项目采用 Conventional Commits 风格的提交前缀，例如 `feat`、`fix`、`docs`、`refactor`、`test` 和 `chore`。
 
-**Pull Request Process:**
+## 浏览器支持
 
-1. Fork the code
-2. Create your branch: `git checkout -b feat/xxxx`
-3. Submit your changes: `git commit -am 'feat(function): add xxxxx'`
-4. Push your branch: `git push origin feat/xxxx`
-5. Submit `pull request`
+开发环境建议使用 Chrome 80 或更新版本。项目面向现代浏览器，不支持 Internet Explorer。
 
-## Git Contribution Submission Specification
+## 许可
 
-Reference [vue](https://github.com/vuejs/vue/blob/dev/.github/COMMIT_CONVENTION.md) specification ([Angular](https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-angular))
-
-- `feat` Add new features
-- `fix` Fix the problem/BUG
-- `style` The code style is related and does not affect the running result
-- `perf` Optimization/performance improvement
-- `refactor` Refactor
-- `revert` Undo edit
-- `test` Test related
-- `docs` Documentation/notes
-- `chore` Dependency update/scaffolding configuration modification etc.
-- `ci` Continuous integration
-- `types` Type definition file changes
-
-## Browser Support
-
-The `Chrome 80+` browser is recommended for local development
-
-Support modern browsers, not IE
-
-| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Safari |
-| :-: | :-: | :-: | :-: |
-| last 2 versions | last 2 versions | last 2 versions | last 2 versions |
-
-## Maintainer
-
-[@Vben](https://github.com/anncwb)
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=vbenjs/vue-vben-admin&type=Date)](https://star-history.com/#vbenjs/vue-vben-admin&Date)
-
-## Donate
-
-If you think this project is helpful to you, you can help the author buy a cup of coffee to show your support!
-
-![donate](https://unpkg.com/@vbenjs/static-source@0.1.7/source/sponsor.png)
-
-<a style="display: block;width: 100px;height: 50px;line-height: 50px; color: #fff;text-align: center; background: #408aee;border-radius: 4px;" href="https://www.paypal.com/paypalme/cvvben">Paypal Me</a>
-
-## Contributors
-
-<a href="https://openomy.app/github/vbenjs/vue-vben-admin" target="_blank" style="display: block; width: 100%;" align="center">
-  <img src="https://openomy.app/svg?repo=vbenjs/vue-vben-admin&chart=bubble&latestMonth=3" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
- </a>
-
-<a href="https://github.com/vbenjs/vue-vben-admin/graphs/contributors">
-  <img alt="Contributors" src="https://contrib.rocks/image?repo=vbenjs/vue-vben-admin" />
-</a>
-
-## Discord
-
-- [Github Discussions](https://github.com/anncwb/vue-vben-admin/discussions)
-
-## License
-
-[MIT © Vben-2020](./LICENSE)
+本项目基于 Vben Admin，许可信息见 [`LICENSE`](LICENSE)。
