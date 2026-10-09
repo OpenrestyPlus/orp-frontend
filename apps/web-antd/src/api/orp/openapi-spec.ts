@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 20089)
-Total output lines: 1665
-
 /**
  * OpenrestyPlus OpenAPI 3.0 规范。
  *
@@ -764,7 +761,283 @@ export const openApiSpec = {
         operationId: 'updateIpGroup',
         parameters: [idParam],
         requestBody: jsonBody('#/components/schemas/OrpIpGroupPayload', {
-          name: 'Office_In…4089 tokens truncated…仅支持 reload。', parameters: [{ name: 'nodeId', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: '固定 reload 任务' }, '204': { description: '暂无任务' } } },
+          name: 'Office_Internal_Net',
+          description: '总部与分支办公内网网段（含分支扩展）',
+          members: ['192.168.0.0/16', '10.200.0.0/24', '172.16.10.15'],
+        }),
+        responses: {
+          '200': ok('#/components/schemas/OrpIpGroup'),
+          '404': bad('IP 组不存在或已被删除', 404),
+        },
+      },
+      delete: {
+        tags: ['ip-group'],
+        summary: '删除 IP 组',
+        operationId: 'deleteIpGroup',
+        parameters: [idParam],
+        responses: {
+          '200': ok('#/components/schemas/NullData'),
+          '404': bad('IP 组不存在或已被删除', 404),
+        },
+      },
+    },
+    '/orp/upstream-groups': {
+      get: {
+        tags: ['upstream'],
+        summary: '分页查询上游服务器组列表',
+        operationId: 'listUpstreamGroups',
+        parameters: [
+          ...pageParams,
+          { name: 'centerId', in: 'query', schema: { type: 'integer' }, description: '按中心过滤' },
+          { name: 'keyword', in: 'query', schema: { type: 'string' }, description: '关键字（匹配名称/描述/标签）' },
+        ],
+        responses: { '200': ok('#/components/schemas/UpstreamGroupPage'), '400': bad('查询参数错误') },
+      },
+      post: {
+        tags: ['upstream'],
+        summary: '新增上游服务器组',
+        operationId: 'createUpstreamGroup',
+        requestBody: jsonBody('#/components/schemas/UpstreamGroupPayload', {
+          centerId: 1,
+          name: 'api-gateway',
+          lbPolicy: 'least_conn',
+          description: 'API 网关上游',
+          tags: ['api'],
+          nodes: [
+            { host: '10.60.3.11', port: 8080, weight: 2, maxFails: 3, failTimeoutSec: 10, slowStartSec: 0, backup: false },
+          ],
+          healthCheck: { type: 'http', intervalSec: 5, path: '/healthz', expectedStatus: [200] },
+        }),
+        responses: {
+          '200': ok('#/components/schemas/UpstreamGroup'),
+          '400': bad('名称已存在 / 节点校验失败'),
+          '404': bad('所属中心不存在', 404),
+        },
+      },
+    },
+    '/orp/upstream-groups/{id}': {
+      put: {
+        tags: ['upstream'],
+        summary: '更新上游服务器组',
+        description: '重命名时若旧名称被 HTTP 路由或 Stream 服务引用，将被拦截。',
+        operationId: 'updateUpstreamGroup',
+        parameters: [idParam],
+        requestBody: jsonBody('#/components/schemas/UpstreamGroupPayload', {
+          centerId: 1,
+          name: 'api-gateway',
+          lbPolicy: 'round_robin',
+          description: 'API 网关上游（更新）',
+          tags: ['api'],
+          nodes: [
+            { host: '10.60.3.11', port: 8080, weight: 3, maxFails: 3, failTimeoutSec: 10, slowStartSec: 0, backup: false },
+            { host: '10.60.3.12', port: 8080, weight: 1, maxFails: 2, failTimeoutSec: 10, slowStartSec: 30, backup: true },
+          ],
+          healthCheck: { type: 'tcp', intervalSec: 10, path: '', expectedStatus: [] },
+        }),
+        responses: {
+          '200': ok('#/components/schemas/UpstreamGroup'),
+          '400': bad('重命名被引用 / 节点校验失败'),
+          '404': bad('上游组不存在或已被删除', 404),
+        },
+      },
+      delete: {
+        tags: ['upstream'],
+        summary: '删除上游服务器组',
+        description: '被 HTTP 路由或 Stream 服务引用时禁止删除，需先解除引用。',
+        operationId: 'deleteUpstreamGroup',
+        parameters: [idParam],
+        responses: {
+          '200': ok('#/components/schemas/NullData'),
+          '400': bad('仍被引用，禁止删除'),
+          '404': bad('上游组不存在或已被删除', 404),
+        },
+      },
+    },
+    '/orp/dashboard/metrics': {
+      get: {
+        tags: ['dashboard'],
+        summary: '大盘核心指标（指标卡/延迟/状态码/健康/节点负载）',
+        operationId: 'getDashboardMetrics',
+        parameters: [
+          { name: 'centerId', in: 'query', schema: { type: 'integer' }, description: '按中心过滤（缺省为全部）' },
+          { name: 'range', in: 'query', schema: { $ref: '#/components/schemas/DashboardRange' }, description: '统计时间范围' },
+        ],
+        responses: { '200': ok('#/components/schemas/DashboardMetrics') },
+      },
+    },
+    '/orp/dashboard/events': {
+      get: {
+        tags: ['dashboard'],
+        summary: '控制面大盘 SSE 实时推送',
+        description: '建立授权事件流，立即推送指标、趋势与排行快照，随后每 10 秒更新；断线后客户端可重连。',
+        operationId: 'streamDashboardEvents',
+        parameters: [
+          { name: 'centerId', in: 'query', schema: { type: 'integer' }, description: '按中心过滤（缺省为全部）' },
+          { name: 'range', in: 'query', schema: { $ref: '#/components/schemas/DashboardRange' }, description: '统计时间范围' },
+        ],
+        responses: {
+          '200': { description: 'text/event-stream，事件名 dashboard，data 为指标、趋势与排行 JSON 快照' },
+          '401': bad('登录状态已失效', 401),
+        },
+      },
+    },
+    '/orp/dashboard/trends': {
+      get: {
+        tags: ['dashboard'],
+        summary: '大盘 QPS / 带宽 / 延迟时间序列趋势',
+        operationId: 'getDashboardTrends',
+        parameters: [
+          { name: 'centerId', in: 'query', schema: { type: 'integer' }, description: '按中心过滤（缺省为全部）' },
+          { name: 'range', in: 'query', schema: { $ref: '#/components/schemas/DashboardRange' }, description: '统计时间范围' },
+        ],
+        responses: { '200': ok('#/components/schemas/DashboardTrends') },
+      },
+    },
+    '/orp/dashboard/top-rankings': {
+      get: {
+        tags: ['dashboard'],
+        summary: 'Top 域名与路由请求排行',
+        operationId: 'getDashboardTopRankings',
+        parameters: [
+          { name: 'centerId', in: 'query', schema: { type: 'integer' }, description: '按中心过滤（缺省为全部）' },
+          { name: 'range', in: 'query', schema: { $ref: '#/components/schemas/DashboardRange' }, description: '统计时间范围' },
+        ],
+        responses: { '200': ok('#/components/schemas/DashboardTopRankings') },
+      },
+    },
+    '/orp/audit-logs': {
+      get: {
+        tags: ['audit'],
+        summary: '分页查询审计日志',
+        description: '按模块 / 操作类型 / 操作人 / 时间范围组合检索，按时间倒序返回。',
+        operationId: 'listAuditLogs',
+        parameters: [
+          ...pageParams,
+          { name: 'module', in: 'query', schema: { $ref: '#/components/schemas/AuditModule' }, description: '按模块过滤' },
+          { name: 'action', in: 'query', schema: { $ref: '#/components/schemas/AuditAction' }, description: '按操作类型过滤' },
+          { name: 'operator', in: 'query', schema: { type: 'string' }, description: '操作人（模糊匹配）' },
+          { name: 'startTime', in: 'query', schema: { type: 'string', example: '2026-09-01' }, description: '起始日期（YYYY-MM-DD）' },
+          { name: 'endTime', in: 'query', schema: { type: 'string', example: '2026-09-30' }, description: '结束日期（YYYY-MM-DD，含当日）' },
+        ],
+        responses: { '200': ok('#/components/schemas/AuditLogPage'), '400': bad('查询参数错误') },
+      },
+    },
+    '/orp/nodes/{id}/latency-history': {
+      get: {
+        tags: ['nodes'],
+        summary: '查询节点探活延迟历史',
+        operationId: 'getNodeLatencyHistory',
+        parameters: [{ ...idParam }, { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 500 } }],
+        responses: { '200': { description: '延迟采样和统计摘要' } },
+      },
+    },
+    '/orp/certificates/stats': {
+      get: {
+        tags: ['tls'],
+        summary: '证书统计与到期概览',
+        operationId: 'getCertificateStats',
+        responses: { '200': { description: '证书总数、有效数和到期数量' } },
+      },
+    },
+    '/orp/settings/groups': {
+      get: { tags: ['settings'], summary: '查询配置分组名称', operationId: 'listSettingGroupNames', responses: { '200': { description: '配置分组列表' } } },
+    },
+    '/orp/settings/{id}/plain': {
+      get: { tags: ['settings'], summary: '授权读取敏感配置明文', operationId: 'getSettingPlain', parameters: [idParam], responses: { '200': { description: '配置明文，仅有读取权限时返回' }, '403': bad('无明文读取权限', 403) } },
+    },
+    '/orp/settings/{id}/status': {
+      put: { tags: ['settings'], summary: '启用或停用配置项', operationId: 'updateSettingStatus', parameters: [idParam], responses: { '200': { description: '更新后的配置项' } } },
+    },
+    '/orp/settings/batch-move': {
+      post: { tags: ['settings'], summary: '批量移动配置项分组', operationId: 'batchMoveSettings', responses: { '200': { description: '移动结果' } } },
+    },
+    '/orp/setting-groups': {
+      get: { tags: ['settings'], summary: '查询配置分组', operationId: 'listSettingGroups', responses: { '200': { description: '配置分组列表' } } },
+      post: { tags: ['settings'], summary: '新增配置分组', operationId: 'createSettingGroup', responses: { '200': { description: '新建分组' } } },
+    },
+    '/orp/setting-groups/{id}': {
+      put: { tags: ['settings'], summary: '编辑配置分组', operationId: 'updateSettingGroup', parameters: [idParam], responses: { '200': { description: '更新后的分组' } } },
+      delete: { tags: ['settings'], summary: '删除配置分组', operationId: 'deleteSettingGroup', parameters: [idParam], responses: { '200': ok('#/components/schemas/NullData') } },
+    },
+    '/orp/setting-groups/reorder': {
+      put: { tags: ['settings'], summary: '调整配置分组顺序', operationId: 'reorderSettingGroups', responses: { '200': { description: '更新后的分组顺序' } } },
+    },
+    '/orp/http-directives': {
+      get: { tags: ['http'], summary: '读取 HTTP 全局指令', operationId: 'getHttpDirectives', responses: { '200': { description: 'HTTP 指令集合' } } },
+      put: { tags: ['http'], summary: '更新 HTTP 全局指令', operationId: 'putHttpDirectives', responses: { '200': { description: '更新结果' } } },
+    },
+    '/orp/stream-directives': {
+      get: { tags: ['stream'], summary: '读取 Stream 全局指令', operationId: 'getStreamDirectives', responses: { '200': { description: 'Stream 指令集合' } } },
+      put: { tags: ['stream'], summary: '更新 Stream 全局指令', operationId: 'putStreamDirectives', responses: { '200': { description: '更新结果' } } },
+    },
+    '/orp/http-log-format': {
+      get: { tags: ['http'], summary: '读取 HTTP 访问日志格式', operationId: 'getHttpLogFormat', responses: { '200': { description: 'HTTP 日志格式' } } },
+      put: { tags: ['http'], summary: '更新 HTTP 访问日志格式', operationId: 'putHttpLogFormat', responses: { '200': { description: '更新结果' } } },
+    },
+    '/orp/http-error-pages': {
+      get: { tags: ['http'], summary: '读取 HTTP 全局错误页面', operationId: 'getHttpErrorPages', responses: { '200': { description: '状态码或状态码|Content-Type 到页面文本的映射' } } },
+      put: {
+        tags: ['http'], summary: '更新 HTTP 全局错误页面', operationId: 'putHttpErrorPages',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { type: 'object', required: ['errorPages'], properties: { errorPages: { type: 'object', additionalProperties: { type: 'string' }, description: '支持 400–599 状态码；内容限制 1 MB' } } }, example: { errorPages: { '404': '<h1>Not found</h1>', '404|application/json': '{"error":"not found"}' } } } },
+        },
+        responses: { '200': { description: '更新后的错误页面映射' }, '400': bad('错误页面配置无效') },
+      },
+    },
+    '/orp/stream-log-format': {
+      get: { tags: ['stream'], summary: '读取 Stream 访问日志格式', operationId: 'getStreamLogFormat', responses: { '200': { description: 'Stream 日志格式' } } },
+      put: { tags: ['stream'], summary: '更新 Stream 访问日志格式', operationId: 'putStreamLogFormat', responses: { '200': { description: '更新结果' } } },
+    },
+    '/orp/logs': {
+      get: {
+        tags: ['logs'],
+        summary: '读取本地节点或服务日志',
+        operationId: 'getLogs',
+        parameters: [{ name: 'target', in: 'query', required: true, schema: { type: 'string', example: 'node:11' } }],
+        responses: { '200': { description: '日志行列表' }, '400': bad('日志目标无效') },
+      },
+    },
+    '/orp/logs/events': {
+      get: {
+        tags: ['logs'],
+        summary: '通过 Server-Sent Events 推送实时日志',
+        operationId: 'streamLogEvents',
+        parameters: [{ name: 'target', in: 'query', required: true, schema: { type: 'string', example: 'node:11' } }],
+        responses: { '200': { description: 'SSE 日志事件流', content: { 'text/event-stream': { schema: { type: 'string' } } } }, '400': bad('日志目标无效') },
+      },
+    },
+    '/orp/publish/precheck': {
+      post: { tags: ['publish'], summary: '冻结候选并在目标节点运行 nginx -t', operationId: 'precheckPublish', responses: { '200': { description: '逐节点预检结果与配置 Diff' } } },
+    },
+    '/orp/publish/summary': {
+      get: { tags: ['publish'], summary: '查询待下发配置汇总', operationId: 'getPublishSummary', responses: { '200': { description: '按中心及节点分组的待发布摘要' } } },
+    },
+    '/orp/publish/diff': {
+      get: { tags: ['publish'], summary: '查询节点期望配置与已发布配置差异', operationId: 'getPublishDiff', parameters: [{ name: 'nodeId', in: 'query', required: true, schema: { type: 'integer' } }], responses: { '200': { description: '语义和文本 Diff' } } },
+    },
+    '/orp/publish/history': {
+      get: { tags: ['publish'], summary: '分页查询发布历史', operationId: 'listPublishHistory', parameters: [...pageParams, { name: 'centerId', in: 'query', schema: { type: 'integer' } }, { name: 'nodeId', in: 'query', schema: { type: 'integer' } }], responses: { '200': { description: '发布历史列表' } } },
+    },
+    '/orp/publish/history/stats': {
+      get: { tags: ['publish'], summary: '查询发布历史统计', operationId: 'getPublishHistoryStats', responses: { '200': { description: '成功率和变更排行' } } },
+    },
+    '/orp/publish/rollback': {
+      post: { tags: ['publish'], summary: '从发布历史快照执行回滚', operationId: 'rollbackPublish', responses: { '200': { description: '回滚批次信息' } } },
+    },
+    '/orp/alert-channels': {
+      get: { tags: ['alerts'], summary: '查询告警推送通道', operationId: 'listAlertChannels', responses: { '200': { description: '通道列表（地址脱敏，密钥不下发）' } } },
+      post: {
+        tags: ['alerts'], summary: '创建 Webhook 或飞书机器人通道', operationId: 'createAlertChannel',
+        requestBody: jsonBody('#/components/schemas/AlertChannelPayload', { name: '运维告警群', type: 'webhook', webhookUrl: 'https://example.com/webhook', secret: '可选签名密钥', enabled: true }),
+        responses: { '201': { description: '已创建的通道（地址脱敏）' }, '400': bad('通道类型、地址或名称无效') },
+      },
+    },
+    '/agent/v1/heartbeat': {
+      post: { tags: ['agent'], summary: 'Agent 上报心跳', operationId: 'agentHeartbeat', security: [], description: '仅可通过独立 mTLS listener 调用；客户端证书指纹必须绑定到请求中的 nodeId。', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['nodeId', 'state'], properties: { nodeId: { type: 'string' }, state: { type: 'object' } } } } } }, responses: { '204': { description: '心跳已保存' }, '401': { description: '证书未登记或节点 ID 不匹配' } } },
+    },
+    '/agent/v1/tasks/next': {
+      get: { tags: ['agent'], summary: 'Agent 领取一个固定操作任务', operationId: 'agentNextTask', security: [], description: '仅可通过独立 mTLS listener 调用。无任务返回 204；当前仅支持 reload。', parameters: [{ name: 'nodeId', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: '固定 reload 任务' }, '204': { description: '暂无任务' } } },
     },
     '/agent/v1/tasks/{taskId}/result': {
       post: { tags: ['agent'], summary: 'Agent 回报固定操作任务结果', operationId: 'agentTaskResult', security: [], description: '仅可通过独立 mTLS listener 调用；任务结果按 taskId 幂等保存。', parameters: [{ name: 'taskId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['taskId', 'nodeId', 'status'], properties: { taskId: { type: 'string', format: 'uuid' }, nodeId: { type: 'string' }, status: { type: 'string', enum: ['succeeded', 'failed', 'rejected'] }, startedAt: { type: 'string', format: 'date-time' }, completedAt: { type: 'string', format: 'date-time' }, output: { type: 'string', maxLength: 4096 }, error: { type: 'string', maxLength: 2048 } } } } } }, responses: { '204': { description: '结果已保存' }, '403': { description: '任务不属于该节点' }, '409': { description: '任务尚未领取或已经过期' } } },
